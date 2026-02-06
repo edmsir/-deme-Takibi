@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { format, parseISO, isToday, isTomorrow } from 'date-fns';
 import { tr } from 'date-fns/locale';

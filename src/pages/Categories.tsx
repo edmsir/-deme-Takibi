@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useCategories } from '../hooks/useCategories';
 import { Plus, Trash2, Edit2, CheckCircle2, XCircle, Tag } from 'lucide-react';
 import clsx from 'clsx';
