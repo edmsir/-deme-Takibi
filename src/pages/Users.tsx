@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase, supabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import {
     UserPlus,
@@ -62,36 +62,31 @@ export default function Users() {
         setError(null);
 
         try {
-            // Convert username to internal email
             const internalEmail = formData.username.includes('@')
                 ? formData.username
                 : `${formData.username}@takip.com`;
 
-            // 1. Create User in Auth using the Admin Client
-            const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-                email: internalEmail,
-                password: formData.password,
-                email_confirm: true,
-                user_metadata: { role: formData.role }
+            // Call Netlify Function instead of direct Supabase Admin
+            const response = await fetch('/.netlify/functions/manage-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'createUser',
+                    data: {
+                        email: internalEmail,
+                        password: formData.password,
+                        role: formData.role
+                    }
+                })
             });
 
-            if (authError) throw authError;
-
-            // The database trigger 'on_auth_user_created' will handle basic profile creation.
-            // But we explicitly update the role to ensure it matches the form selection.
-            if (authData.user) {
-                const { error: profileError } = await supabaseAdmin
-                    .from('profiles')
-                    .update({ role: formData.role })
-                    .eq('id', authData.user.id);
-
-                if (profileError) console.error('Profile role update error:', profileError);
-            }
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Kullanıcı oluşturulamadı.');
 
             alert('Kullanıcı başarıyla oluşturuldu.');
             setFormData({ username: '', password: '', role: 'user' });
             setIsModalOpen(false);
-            fetchProfiles(); // Refresh list
+            fetchProfiles();
         } catch (err: any) {
             setError(err.message === 'User already exists' ? 'Bu kullanıcı adı zaten alınmış.' : err.message);
         } finally {
@@ -109,9 +104,18 @@ export default function Users() {
         if (!confirm(`${username} kullanıcısını silmek istediğinize emin misiniz?`)) return;
 
         try {
-            // Full deletion (Auth + Profile) using Admin client
-            const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
-            if (authError) throw authError;
+            // Call Netlify Function instead of direct Supabase Admin
+            const response = await fetch('/.netlify/functions/manage-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'deleteUser',
+                    data: { id }
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Kullanıcı silinemez.');
 
             setProfiles(prev => prev.filter(p => p.id !== id));
         } catch (err: any) {
@@ -174,8 +178,8 @@ export default function Users() {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${p.role === 'admin'
-                                            ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700'
                                         }`}>
                                         {p.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}
                                     </span>
