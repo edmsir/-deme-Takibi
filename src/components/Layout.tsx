@@ -67,7 +67,7 @@ export default function Layout() {
 
             {/* Sidebar */}
             <div className={clsx(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out lg:static lg:transform-none",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
                 isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 border-b border-slate-800 flex items-center justify-between">
